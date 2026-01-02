@@ -1,25 +1,54 @@
 "use client";
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect } from 'react';
+import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
-import { createProperty } from '@/services/propertyService';
+import { getProperty, updateProperty } from '@/services/propertyService';
 import { formatKoreanPrice, formatToPyeong } from '@/lib/formatter';
+import { Property } from '@/types/property';
 import { useToast } from '@/components/ToastProvider';
 
-export default function AddProperty() {
+export default function EditProperty() {
     const router = useRouter();
-    const [isSubmitting, setIsSubmitting] = useState(false);
+    const params = useParams();
+    const id = params.id as string;
     const { showToast } = useToast();
+
+    const [isLoading, setIsLoading] = useState(true);
+    const [isSubmitting, setIsSubmitting] = useState(false);
     const [formData, setFormData] = useState({
         title: '',
         description: '',
         address: '',
         price: 0,
         area: 0,
-        type: 'APARTMENT' as 'APARTMENT' | 'HOUSE' | 'COMMERCIAL',
-        status: 'AVAILABLE' as 'AVAILABLE' | 'SOLD' | 'RENTED',
+        type: 'APARTMENT' as Property['type'],
+        status: 'AVAILABLE' as Property['status'],
     });
+
+    useEffect(() => {
+        const fetchProperty = async () => {
+            try {
+                const data = await getProperty(id);
+                setFormData({
+                    title: data.title,
+                    description: data.description,
+                    address: data.address,
+                    price: data.price,
+                    area: data.area,
+                    type: data.type,
+                    status: data.status,
+                });
+            } catch (error) {
+                console.error(error);
+                showToast('매물 정보를 불러오는데 실패했습니다', 'error');
+                router.push('/');
+            } finally {
+                setIsLoading(false);
+            }
+        };
+        if (id) fetchProperty();
+    }, [id, router]);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
         const { name, value } = e.target;
@@ -33,30 +62,38 @@ export default function AddProperty() {
         e.preventDefault();
         setIsSubmitting(true);
         try {
-            await createProperty(formData);
-            showToast('매물이 성공적으로 등록되었습니다', 'success');
+            await updateProperty(id, formData);
+            showToast('매물 정보가 수정되었습니다', 'success');
             router.push('/');
             router.refresh();
         } catch (error) {
             console.error(error);
-            showToast('매물 등록에 실패했습니다', 'error');
+            showToast('매물 수정에 실패했습니다', 'error');
         } finally {
             setIsSubmitting(false);
         }
     };
 
     const handleCancel = () => {
-        if (confirm('작성 중인 내용이 사라집니다. 취소하시겠습니까?')) {
+        if (confirm('수정 중인 내용이 사라집니다. 취소하시겠습니까?')) {
             router.push('/');
         }
     };
+
+    if (isLoading) {
+        return (
+            <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
+                <p className="text-gray-500">정보를 불러오는 중...</p>
+            </div>
+        );
+    }
 
     return (
         <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
             {/* Header */}
             <header className="bg-white dark:bg-gray-800 shadow">
                 <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8 flex justify-between items-center">
-                    <h1 className="text-3xl font-bold text-gray-900 dark:text-white">새 매물 등록</h1>
+                    <h1 className="text-3xl font-bold text-gray-900 dark:text-white">매물 정보 수정</h1>
                     <Link
                         href="/"
                         className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors"
@@ -239,10 +276,10 @@ export default function AddProperty() {
                                             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                                             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                                         </svg>
-                                        등록 중...
+                                        저장 중...
                                     </>
                                 ) : (
-                                    '매물 등록'
+                                    '정보 수정'
                                 )}
                             </button>
                         </div>

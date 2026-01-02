@@ -10,6 +10,14 @@ export const getProperties = async (): Promise<Property[]> => {
     return response.json();
 };
 
+export const getProperty = async (id: string): Promise<Property> => {
+    const response = await fetch(`${API_URL}/properties/${id}`);
+    if (!response.ok) {
+        throw new Error('Failed to fetch property');
+    }
+    return response.json();
+};
+
 export const createProperty = async (property: Omit<Property, 'id' | 'createdAt' | 'updatedAt'>): Promise<Property> => {
     const response = await fetch(`${API_URL}/properties`, {
         method: 'POST',
@@ -24,18 +32,22 @@ export const createProperty = async (property: Omit<Property, 'id' | 'createdAt'
     return response.json();
 };
 
-export const updatePropertyStatus = async (id: string, status: string): Promise<Property> => {
+export const updateProperty = async (id: string, property: Partial<Property>): Promise<Property> => {
     const response = await fetch(`${API_URL}/properties/${id}`, {
         method: 'PATCH',
         headers: {
             'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ status }),
+        body: JSON.stringify(property),
     });
     if (!response.ok) {
-        throw new Error('Failed to update property status');
+        throw new Error('Failed to update property');
     }
     return response.json();
+};
+
+export const updatePropertyStatus = async (id: string, status: Property['status']): Promise<Property> => {
+    return updateProperty(id, { status });
 };
 
 export const deleteProperty = async (id: string): Promise<void> => {
