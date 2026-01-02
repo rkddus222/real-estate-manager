@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { getProperties, updatePropertyStatus, deleteProperty } from '@/services/propertyService';
 import { Property } from '@/types/property';
+import { formatKoreanPrice, formatToPyeong } from '@/lib/formatter';
 
 type FilterType = 'ALL' | 'ACTIVE' | 'INACTIVE';
 
@@ -97,56 +98,92 @@ export default function Home() {
             ) : filteredProperties.length === 0 ? (
               <p className="text-gray-500">등록된 매물이 없습니다.</p>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {filteredProperties.map((property) => (
-                  <div key={property.id} className="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg hover:shadow-lg transition-shadow duration-300">
-                    <div className="p-5">
-                      <div className="flex justify-between items-center mb-2">
-                        <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${property.status === 'AVAILABLE' ? 'bg-green-100 text-green-800' :
-                          property.status === 'SOLD' ? 'bg-red-100 text-red-800' : 'bg-yellow-100 text-yellow-800'
-                          }`}>
-                          {property.status}
-                        </span>
-                        <span className="text-sm text-gray-500">{property.type}</span>
-                      </div>
-                      <h3 className="text-lg leading-6 font-medium text-gray-900 dark:text-white mb-1">
-                        {property.title}
-                      </h3>
-                      <p className="text-sm text-gray-500 mb-4">{property.address}</p>
-                      <div className="flex justify-between items-end border-t border-gray-100 pt-4">
-                        <div>
-                          <p className="text-sm text-gray-500">가격</p>
-                          <p className="text-lg font-bold text-blue-600">
-                            {new Intl.NumberFormat('ko-KR', { style: 'currency', currency: 'KRW' }).format(property.price)}
-                          </p>
-                        </div>
-                        <div className="text-right">
-                          <p className="text-sm text-gray-500">면적</p>
-                          <p className="text-md font-medium text-gray-900 dark:text-gray-300">{property.area} m²</p>
-                        </div>
-                      </div>
-
-                      {/* Status Change & Delete */}
-                      <div className="mt-4 flex gap-2">
-                        <select
-                          value={property.status}
-                          onChange={(e) => handleStatusChange(property.id, e.target.value)}
-                          className="flex-1 px-3 py-2 border border-gray-300 rounded-md text-sm"
-                        >
-                          <option value="AVAILABLE">판매중</option>
-                          <option value="SOLD">판매완료</option>
-                          <option value="RENTED">임대완료</option>
-                        </select>
-                        <button
-                          onClick={() => handleDelete(property.id, property.title)}
-                          className="px-3 py-2 bg-red-500 hover:bg-red-700 text-white rounded-md text-sm"
-                        >
-                          삭제
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                ))}
+              <div className="bg-white dark:bg-gray-800 shadow overflow-hidden rounded-lg">
+                <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                  <thead className="bg-gray-50 dark:bg-gray-700">
+                    <tr>
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                        상태
+                      </th>
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                        제목
+                      </th>
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                        주소
+                      </th>
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                        유형
+                      </th>
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                        가격
+                      </th>
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                        면적
+                      </th>
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                        관리
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                    {filteredProperties.map((property) => (
+                      <tr key={property.id} className="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-150">
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${property.status === 'AVAILABLE' ? 'bg-green-100 text-green-800' :
+                            property.status === 'SOLD' ? 'bg-red-100 text-red-800' : 'bg-yellow-100 text-yellow-800'
+                            }`}>
+                            {property.status}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="text-sm font-medium text-gray-900 dark:text-white">
+                            {property.title}
+                          </div>
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="text-sm text-gray-500 dark:text-gray-400">
+                            {property.address}
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="text-sm text-gray-900 dark:text-gray-300">
+                            {property.type}
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="text-sm font-semibold text-blue-600 dark:text-blue-400">
+                            {formatKoreanPrice(property.price)}
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="text-sm text-gray-900 dark:text-gray-300">
+                            {property.area} m²
+                            <span className="ml-1 text-xs text-gray-500">({formatToPyeong(property.area)})</span>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm">
+                          <div className="flex gap-2">
+                            <select
+                              value={property.status}
+                              onChange={(e) => handleStatusChange(property.id, e.target.value)}
+                              className="px-2 py-1 border border-gray-300 dark:border-gray-600 rounded-md text-xs bg-white dark:bg-gray-700 dark:text-gray-200"
+                            >
+                              <option value="AVAILABLE">판매중</option>
+                              <option value="SOLD">판매완료</option>
+                              <option value="RENTED">임대완료</option>
+                            </select>
+                            <button
+                              onClick={() => handleDelete(property.id, property.title)}
+                              className="px-2 py-1 bg-red-500 hover:bg-red-700 text-white rounded-md text-xs transition-colors duration-150"
+                            >
+                              삭제
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
             )}
           </div>
