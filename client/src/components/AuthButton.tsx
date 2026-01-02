@@ -3,37 +3,42 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { supabase } from '@/lib/supabase';
-import { User } from '@supabase/supabase-js';
 
 export default function AuthButton() {
     const router = useRouter();
-    const [user, setUser] = useState<User | null>(null);
+    const [isLoggedIn, setIsLoggedIn] = useState(false);
 
     useEffect(() => {
-        const getUser = async () => {
-            const { data: { user } } = await supabase.auth.getUser();
-            setUser(user);
+        const checkLogin = async () => {
+            try {
+                const res = await fetch('/api/me');
+                if (res.ok) {
+                    const data = await res.json();
+                    setIsLoggedIn(data.isLoggedIn);
+                }
+            } catch (error) {
+                console.error("Auth check failed", error);
+            }
         };
-        getUser();
-
-        const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-            setUser(session?.user ?? null);
-        });
-
-        return () => subscription.unsubscribe();
+        checkLogin();
     }, []);
 
     const handleLogout = async () => {
-        await supabase.auth.signOut();
-        router.refresh();
+        try {
+            await fetch('/api/logout', { method: 'POST' });
+            setIsLoggedIn(false);
+            router.refresh();
+            router.push('/');
+        } catch (error) {
+            console.error("Logout failed", error);
+        }
     };
 
-    if (user) {
+    if (isLoggedIn) {
         return (
             <div className="flex items-center gap-4">
                 <span className="text-sm text-gray-600 dark:text-gray-300 hidden sm:inline">
-                    {user.email}님
+                    관리자님
                 </span>
                 <button
                     onClick={handleLogout}
