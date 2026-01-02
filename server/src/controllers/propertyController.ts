@@ -30,3 +30,45 @@ export const createProperty = (req: Request, res: Response) => {
     propertyStore.push(newProperty);
     res.status(201).json(newProperty);
 };
+
+export const getProperty = (req: Request, res: Response) => {
+    const { id } = req.params;
+    const property = propertyStore.find(p => p.id === id);
+    if (!property) {
+        res.status(404).json({ message: 'Property not found' });
+        return;
+    }
+    res.json(property);
+};
+
+export const updateProperty = (req: Request, res: Response) => {
+    const { id } = req.params;
+    const index = propertyStore.findIndex(p => p.id === id);
+
+    if (index === -1) {
+        res.status(404).json({ message: 'Property not found' });
+        return;
+    }
+
+    const updatedProperty = {
+        ...propertyStore[index],
+        ...req.body,
+        updatedAt: new Date()
+    };
+
+    propertyStore[index] = updatedProperty;
+    res.json(updatedProperty);
+};
+
+export const deleteProperty = (req: Request, res: Response) => {
+    const { id } = req.params;
+    const index = propertyStore.findIndex(p => p.id === id);
+
+    if (index === -1) {
+        res.status(404).json({ message: 'Property not found' });
+        return;
+    }
+
+    propertyStore = propertyStore.filter(p => p.id !== id);
+    res.status(204).send();
+};
