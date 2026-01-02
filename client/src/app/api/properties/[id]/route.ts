@@ -1,43 +1,65 @@
 import { NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
+import { properties, setProperties } from '../../data';
+
+export async function GET(
+    request: Request,
+    { params }: { params: Promise<{ id: string }> }
+) {
+    const id = (await params).id;
+    const property = properties.find(p => p.id === id);
+
+    if (!property) {
+        return NextResponse.json(
+            { message: 'Property not found' },
+            { status: 404 }
+        );
+    }
+
+    return NextResponse.json(property);
+}
 
 export async function PATCH(
     request: Request,
     { params }: { params: Promise<{ id: string }> }
 ) {
-    try {
-        const { id } = await params;
-        const body = await request.json();
-        const { status } = body;
+    const id = (await params).id;
+    const body = await request.json();
 
-        const property = await prisma.property.update({
-            where: { id },
-            data: {
-                status,
-                updatedAt: new Date(),
-            },
-        });
-
-        return NextResponse.json(property);
-    } catch (error) {
-        console.error('Error updating property:', error);
-        return NextResponse.json({ error: 'Failed to update property' }, { status: 500 });
+    const index = properties.findIndex(p => p.id === id);
+    if (index === -1) {
+        return NextResponse.json(
+            { message: 'Property not found' },
+            { status: 404 }
+        );
     }
+
+    const updatedProperty = {
+        ...properties[index],
+        ...body,
+        updatedAt: new Date(),
+    };
+
+    properties[index] = updatedProperty;
+
+    return NextResponse.json(updatedProperty);
 }
 
 export async function DELETE(
     request: Request,
     { params }: { params: Promise<{ id: string }> }
 ) {
-    try {
-        const { id } = await params;
-        await prisma.property.delete({
-            where: { id },
-        });
+    const id = (await params).id;
+    const index = properties.findIndex(p => p.id === id);
 
-        return NextResponse.json({ message: 'Property deleted successfully' });
-    } catch (error) {
-        console.error('Error deleting property:', error);
-        return NextResponse.json({ error: 'Failed to delete property' }, { status: 500 });
+    if (index === -1) {
+        return NextResponse.json(
+            { message: 'Property not found' },
+            { status: 404 }
+        );
     }
+
+    const newProperties = properties.filter(p => p.id !== id);
+    setProperties(newProperties);
+
+    return new NextResponse(null, { status: 204 });
 }
