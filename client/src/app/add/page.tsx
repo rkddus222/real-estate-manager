@@ -7,6 +7,7 @@ import { createProperty } from '@/services/propertyService';
 import { formatKoreanPrice, formatToPyeong } from '@/lib/formatter';
 import { useToast } from '@/components/ToastProvider';
 import AuthButton from '@/components/AuthButton';
+import ImageUpload from '@/components/ImageUpload';
 
 export default function AddProperty() {
     const router = useRouter();
@@ -20,7 +21,12 @@ export default function AddProperty() {
         area: 0,
         type: 'APARTMENT' as 'APARTMENT' | 'HOUSE' | 'COMMERCIAL',
         status: 'AVAILABLE' as 'AVAILABLE' | 'SOLD' | 'RENTED',
+        images: [] as string[],
     });
+
+    const handleImageUpload = (urls: string[]) => {
+        setFormData(prev => ({ ...prev, images: urls }));
+    };
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
         const { name, value } = e.target;
@@ -75,6 +81,12 @@ export default function AddProperty() {
                     <div className="px-4 py-6 sm:px-0">
                         <form onSubmit={handleSubmit} className="bg-white dark:bg-gray-800 shadow rounded-lg overflow-hidden">
                             <div className="p-6 space-y-6">
+                                {/* 이미지 업로드 섹션 */}
+                                <div>
+                                    <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4">매물 사진</h3>
+                                    <ImageUpload onUploadComplete={handleImageUpload} />
+                                </div>
+
                                 {/* 기본 정보 섹션 */}
                                 <div>
                                     <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4">기본 정보</h3>

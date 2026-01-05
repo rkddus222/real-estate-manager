@@ -16,6 +16,7 @@ model Property {
   area        Float
   type        String
   status      String   @default("AVAILABLE")
+  images      String[]
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }

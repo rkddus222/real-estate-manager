@@ -9,4 +9,5 @@ export interface Property {
     status: 'AVAILABLE' | 'SOLD' | 'RENTED';
     createdAt: Date;
     updatedAt: Date;
+    images: string[];
 }

@@ -254,6 +254,9 @@ export default function Home() {
                           <div className="text-sm font-medium text-gray-900 dark:text-white">
                             {property.title}
                           </div>
+                          {property.images && property.images.length > 0 && (
+                            <img src={property.images[0]} alt={property.title} className="mt-1 h-12 w-12 object-cover rounded-md" />
+                          )}
                         </td>
                         <td className="px-6 py-4">
                           <div className="text-sm text-gray-500 dark:text-gray-400">

@@ -1,0 +1,19 @@
+
+import { createClient } from '@supabase/supabase-js';
+
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
+const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
+
+if (!supabaseUrl || !supabaseKey) {
+    console.warn('Supabase credentials missing! Check .env file');
+}
+
+// Ensure valid URL or fallback to prevent build crash
+const isValidUrl = (url: string) => {
+    try { return Boolean(new URL(url)); } catch (e) { return false; }
+}
+
+export const supabase = createClient(
+    isValidUrl(supabaseUrl) ? supabaseUrl : 'https://placeholder.supabase.co',
+    supabaseKey || 'placeholder-key'
+);
