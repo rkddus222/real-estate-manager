@@ -4,16 +4,23 @@ import { createClient } from '@supabase/supabase-js';
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
 
-if (!supabaseUrl || !supabaseKey) {
-    console.warn('Supabase credentials missing! Check .env file');
+if (typeof window !== 'undefined') {
+    if (!supabaseUrl) console.error('NEXT_PUBLIC_SUPABASE_URL is missing');
+    if (!supabaseKey) console.error('NEXT_PUBLIC_SUPABASE_ANON_KEY is missing');
+
+    // Debug logging
+    console.log('Supabase Config:', {
+        url: supabaseUrl ? `${supabaseUrl.substring(0, 15)}...` : 'MISSING',
+        keyLength: supabaseKey ? supabaseKey.length : 0
+    });
 }
 
-// Ensure valid URL or fallback to prevent build crash
-const isValidUrl = (url: string) => {
-    try { return Boolean(new URL(url)); } catch (e) { return false; }
-}
+// Fallback is only for build time or severe misconfiguration to prevent crash
+const urlToUse = supabaseUrl && supabaseUrl.startsWith('http')
+    ? supabaseUrl
+    : 'https://placeholder.supabase.co';
 
 export const supabase = createClient(
-    isValidUrl(supabaseUrl) ? supabaseUrl : 'https://placeholder.supabase.co',
+    urlToUse,
     supabaseKey || 'placeholder-key'
 );
