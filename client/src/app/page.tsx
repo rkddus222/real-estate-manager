@@ -9,6 +9,8 @@ import { useToast } from '@/components/ToastProvider';
 import AuthButton from '@/components/AuthButton';
 import DashboardCharts from '@/components/DashboardCharts';
 import FilterBar from '@/components/FilterBar';
+import Modal from '@/components/Modal';
+import ImageCarousel from '@/components/ImageCarousel';
 
 export default function Home() {
   const [properties, setProperties] = useState<Property[]>([]);
@@ -19,6 +21,7 @@ export default function Home() {
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(true);
   const [sortConfig, setSortConfig] = useState<{ key: keyof Property; direction: 'asc' | 'desc' } | null>(null);
+  const [selectedProperty, setSelectedProperty] = useState<Property | null>(null);
   const { showToast } = useToast();
 
   const resetFilters = () => {
@@ -255,7 +258,21 @@ export default function Home() {
                             {property.title}
                           </div>
                           {property.images && property.images.length > 0 && (
-                            <img src={property.images[0]} alt={property.title} className="mt-1 h-12 w-12 object-cover rounded-md" />
+                            <button
+                              onClick={() => setSelectedProperty(property)}
+                              className="group relative mt-1 block overflow-hidden rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                            >
+                              <img
+                                src={property.images[0]}
+                                alt={property.title}
+                                className="h-12 w-12 object-cover transition-transform group-hover:scale-110"
+                              />
+                              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors flex items-center justify-center">
+                                <span className="opacity-0 group-hover:opacity-100 text-[10px] text-white bg-black/50 px-1 rounded">
+                                  +{property.images.length}
+                                </span>
+                              </div>
+                            </button>
                           )}
                         </td>
                         <td className="px-6 py-4">
@@ -313,6 +330,22 @@ export default function Home() {
           </div>
         </div>
       </main>
+      {/* Image Gallery Modal */}
+      {selectedProperty && (
+        <Modal
+          isOpen={!!selectedProperty}
+          onClose={() => setSelectedProperty(null)}
+          title={selectedProperty.title}
+        >
+          <ImageCarousel
+            images={selectedProperty.images}
+            title={selectedProperty.title}
+          />
+          <div className="mt-4 text-sm text-gray-500 dark:text-gray-400 text-center">
+            총 {selectedProperty.images.length}장의 사진
+          </div>
+        </Modal>
+      )}
     </div>
   );
 }
