@@ -30,7 +30,7 @@ export default function DashboardCharts({ properties }: DashboardChartsProps) {
             {/* Status Distribution */}
             <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700">
                 <h3 className="text-lg font-semibold text-gray-800 dark:text-white mb-4">매물 상태 현황</h3>
-                <div className="h-64">
+                <div style={{ width: '100%', height: 300 }}>
                     {statusData.length > 0 ? (
                         <ResponsiveContainer width="100%" height="100%">
                             <PieChart>
@@ -63,7 +63,7 @@ export default function DashboardCharts({ properties }: DashboardChartsProps) {
             {/* Type Distribution */}
             <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700">
                 <h3 className="text-lg font-semibold text-gray-800 dark:text-white mb-4">유형별 매물 수</h3>
-                <div className="h-64">
+                <div style={{ width: '100%', height: 300 }}>
                     <ResponsiveContainer width="100%" height="100%">
                         <BarChart data={typeData}>
                             <CartesianGrid strokeDasharray="3 3" />
