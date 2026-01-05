@@ -7,16 +7,27 @@ import { Property } from '@/types/property';
 import { formatKoreanPrice, formatToPyeong } from '@/lib/formatter';
 import { useToast } from '@/components/ToastProvider';
 import AuthButton from '@/components/AuthButton';
-
-type FilterType = 'ALL' | 'ACTIVE' | 'INACTIVE';
+import DashboardCharts from '@/components/DashboardCharts';
+import FilterBar from '@/components/FilterBar';
 
 export default function Home() {
   const [properties, setProperties] = useState<Property[]>([]);
-  const [filter, setFilter] = useState<FilterType>('ALL');
+  const [filterType, setFilterType] = useState<Property['type'] | 'ALL'>('ALL');
+  const [filterStatus, setFilterStatus] = useState<Property['status'] | 'ALL'>('ALL');
+  const [priceRange, setPriceRange] = useState<{ min: number; max: number }>({ min: 0, max: 0 });
+  const [areaRange, setAreaRange] = useState<{ min: number; max: number }>({ min: 0, max: 0 });
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(true);
   const [sortConfig, setSortConfig] = useState<{ key: keyof Property; direction: 'asc' | 'desc' } | null>(null);
   const { showToast } = useToast();
+
+  const resetFilters = () => {
+    setFilterType('ALL');
+    setFilterStatus('ALL');
+    setPriceRange({ min: 0, max: 0 });
+    setAreaRange({ min: 0, max: 0 });
+    setSearchTerm('');
+  }
 
   const loadProperties = async () => {
     try {
@@ -67,17 +78,27 @@ export default function Home() {
 
   const filteredProperties = properties.filter(property => {
     // Status Filter
-    const matchesStatus =
-      filter === 'ALL' ||
-      (filter === 'ACTIVE' && property.status === 'AVAILABLE') ||
-      (filter === 'INACTIVE' && (property.status === 'SOLD' || property.status === 'RENTED'));
+    const matchesStatus = filterStatus === 'ALL' || property.status === filterStatus;
+
+    // Type Filter
+    const matchesType = filterType === 'ALL' || property.type === filterType;
+
+    // Price Filter
+    const matchesPrice =
+      (priceRange.min === 0 && priceRange.max === 0) ||
+      (property.price >= priceRange.min && (priceRange.max === 0 || property.price <= priceRange.max));
+
+    // Area Filter
+    const matchesArea =
+      (areaRange.min === 0 && areaRange.max === 0) ||
+      (property.area >= areaRange.min && (areaRange.max === 0 || property.area <= areaRange.max));
 
     // Search Filter
     const matchesSearch =
       property.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       property.address.toLowerCase().includes(searchTerm.toLowerCase());
 
-    return matchesStatus && matchesSearch;
+    return matchesStatus && matchesType && matchesPrice && matchesArea && matchesSearch;
   });
 
   const sortedProperties = [...filteredProperties].sort((a, b) => {
@@ -104,7 +125,10 @@ export default function Home() {
       <main>
         <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
           <div className="px-4 py-6 sm:px-0">
-            {/* Dashboard Stats */}
+            {/* Dashboard Charts */}
+            <DashboardCharts properties={properties} />
+
+            {/* Dashboard Stats Cards (Keeping as summary) */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
               <div className="bg-white dark:bg-gray-800 p-5 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700">
                 <p className="text-sm font-medium text-gray-500 dark:text-gray-400">전체 매물</p>
@@ -141,44 +165,20 @@ export default function Home() {
               </div>
             </div>
 
-            {/* Filter & Search Bar */}
-            <div className="mb-6 flex flex-col md:flex-row gap-4 justify-between items-start md:items-center">
-              <div className="flex gap-2">
-                <button
-                  onClick={() => setFilter('ALL')}
-                  className={`px-4 py-2 rounded transition-all ${filter === 'ALL' ? 'bg-blue-500 text-white shadow-md' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
-                >
-                  전체
-                </button>
-                <button
-                  onClick={() => setFilter('ACTIVE')}
-                  className={`px-4 py-2 rounded transition-all ${filter === 'ACTIVE' ? 'bg-green-500 text-white shadow-md' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
-                >
-                  활성
-                </button>
-                <button
-                  onClick={() => setFilter('INACTIVE')}
-                  className={`px-4 py-2 rounded transition-all ${filter === 'INACTIVE' ? 'bg-gray-500 text-white shadow-md' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
-                >
-                  비활성
-                </button>
-              </div>
-
-              <div className="relative w-full md:w-96">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <svg className="h-5 w-5 text-gray-400" viewBox="0 0 20 20" fill="currentColor">
-                    <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" />
-                  </svg>
-                </div>
-                <input
-                  type="text"
-                  placeholder="제목 또는 주소로 검색..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg leading-5 bg-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent sm:text-sm shadow-sm transition-all"
-                />
-              </div>
-            </div>
+            {/* Filter Bar */}
+            <FilterBar
+              searchTerm={searchTerm}
+              onSearchChange={setSearchTerm}
+              filterType={filterType}
+              onFilterTypeChange={setFilterType}
+              filterStatus={filterStatus}
+              onFilterStatusChange={setFilterStatus}
+              priceRange={priceRange}
+              onPriceRangeChange={setPriceRange}
+              areaRange={areaRange}
+              onAreaRangeChange={setAreaRange}
+              onReset={resetFilters}
+            />
 
             <div className="flex justify-between items-end mb-4">
               <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-200">등록된 매물</h2>
