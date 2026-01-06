@@ -85,6 +85,4 @@ npm run dev
 3. 환경 변수(`DATABASE_URL`, `DIRECT_URL` 등) 등록
 4. 배포 시작
 
-## 📄 라이선스
 
-This project is licensed under the ISC License.
